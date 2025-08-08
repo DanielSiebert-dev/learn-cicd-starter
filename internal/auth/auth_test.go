@@ -11,24 +11,24 @@ import (
 // "Prefer table driven tests"[](https://dave.cheney.net/2019/05/07/prefer-table-driven-tests).
 //
 // Key considerations from the post incorporated here:
-// - Use a table (slice of structs) to define test cases, reducing duplication
-//   and making it easy to add new cases by adding rows.
-// - Include a 'name' field in the struct for descriptive test case names,
-//   improving readability and debugging.
-// - Employ subtests via t.Run to run each case independently, allowing all
-//   tests to execute even if one fails, and enabling all
-//   tests to execute even if one fails, and enabling targeted runs with
-//   'go test -run TestGetAPIKey/subtest-name'.
-// - Use an anonymous struct literal to minimize boilerplate.
-// - For comparisons, use simple equality for strings; if needed, reflect.DeepEqual
-//   could be used for more complex types, with %#v in error messages for better
-//   diagnostics (though not necessary here as outputs are primitives).
-// - Avoid pitfalls like unnamed tests or stopping on first failure by using
-//   subtests instead of t.Fatalf.
-// - Note: For complex diffs, consider go-cmp library, but sticking to standard
-//   library here for simplicity.
-// - Error comparison uses string matching (.Error()) since errors.New creates
-//   new instances each time, and errors.Is would fail on pointer inequality.
+//   - Use a table (slice of structs) to define test cases, reducing duplication
+//     and making it easy to add new cases by adding rows.
+//   - Include a 'name' field in the struct for descriptive test case names,
+//     improving readability and debugging.
+//   - Employ subtests via t.Run to run each case independently, allowing all
+//     tests to execute even if one fails, and enabling all
+//     tests to execute even if one fails, and enabling targeted runs with
+//     'go test -run TestGetAPIKey/subtest-name'.
+//   - Use an anonymous struct literal to minimize boilerplate.
+//   - For comparisons, use simple equality for strings; if needed, reflect.DeepEqual
+//     could be used for more complex types, with %#v in error messages for better
+//     diagnostics (though not necessary here as outputs are primitives).
+//   - Avoid pitfalls like unnamed tests or stopping on first failure by using
+//     subtests instead of t.Fatalf.
+//   - Note: For complex diffs, consider go-cmp library, but sticking to standard
+//     library here for simplicity.
+//   - Error comparison uses string matching (.Error()) since errors.New creates
+//     new instances each time, and errors.Is would fail on pointer inequality.
 //
 // The test covers valid, missing, and malformed header scenarios to ensure
 // robust coverage of boundary conditions. Note that the current function

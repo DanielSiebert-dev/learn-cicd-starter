@@ -20,18 +20,19 @@ var ErrNoAuthHeaderIncluded = errors.New("no authorization header included")
 // On success, it returns the extracted key and nil error.
 //
 // Parameters:
-//   headers (http.Header): The HTTP headers from the request.
+//
+//	headers (http.Header): The HTTP headers from the request.
 //
 // Returns:
-//   string: The extracted API key.
-//   error: Any error encountered during extraction.
+//
+//	string: The extracted API key.
+//	error: Any error encountered during extraction.
 func GetAPIKey(headers http.Header) (string, error) {
 	// Retrieve the Authorization header value.
 	authHeader := headers.Get("Authorization")
 	if authHeader == "" {
-		// Header is missing; return the predefined error.
 		return "", ErrNoAuthHeaderIncluded
-	}
+	} // Header is missing; return the predefined error.
 	// Split the header by space to separate prefix and key.
 	splitAuth := strings.Split(authHeader, " ")
 	// Check for exactly two parts and correct "ApiKey" prefix.
