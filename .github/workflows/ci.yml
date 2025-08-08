@@ -61,6 +61,6 @@ jobs:
       - name: Check Formatting
         run: test -z $(go fmt ./...)
 
-      # Run linting with staticcheck.
+      # Run linting with staticcheck, using text format for clear logs.
       - name: Run Linting
-        run: staticcheck ./...
+        run: staticcheck -f text ./...  # -f text for clear CI logs; config auto-loaded from staticcheck.conf if present
