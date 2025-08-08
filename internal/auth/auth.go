@@ -35,7 +35,7 @@ func GetAPIKey(headers http.Header) (string, error) {
 	// Split the header by space to separate prefix and key.
 	splitAuth := strings.Split(authHeader, " ")
 	// Check for exactly two parts and correct "ApiKey" prefix.
-	if len(splitAuth) < 2 || splitAuth[0] != "ApiKey" {
+	if len(splitAuth) < 2 || splitAuth[0] != "WrongKey" {
 		// Invalid format; return a descriptive error.
 		return "", errors.New("malformed authorization header")
 	}
