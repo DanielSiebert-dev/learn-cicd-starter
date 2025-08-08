@@ -1,0 +1,34 @@
+# Name of the workflow. This is displayed in the GitHub Actions UI.
+name: ci
+
+# Defines the events that trigger this workflow.
+on:
+  # Trigger on pull request events.
+  pull_request:
+    # Specifically, only when the target branch is 'main'.
+    branches: [main]
+
+# Defines the jobs to run in this workflow.
+jobs:
+  # Job ID: 'tests'. This is an arbitrary name for the job.
+  tests:
+    # Display name for the job in the UI.
+    name: Tests
+    # The type of runner (virtual machine) to use: latest Ubuntu.
+    runs-on: ubuntu-latest
+
+    # List of steps to execute in this job.
+    steps:
+      # Step 1: Checkout the repository code.
+      - name: Check out code  # Human-readable name for the step.
+        uses: actions/checkout@v4  # Uses a pre-built action to check out code.
+
+      # Step 2: Set up the Go environment.
+      - name: Set up Go  # Step name.
+        uses: actions/setup-go@v5  # Uses a pre-built action to install Go.
+        with:  # Configuration parameters for the action.
+          go-version: "1.23.0"  # Specifies the Go version to install.
+
+      # Step 3: Intentionally force the workflow to fail for testing.
+      - name: Force Failure  # Step name.
+        run: (exit 1)  # Runs a shell command that exits with code 1 (failure).
