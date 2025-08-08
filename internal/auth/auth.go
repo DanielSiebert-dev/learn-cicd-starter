@@ -1,3 +1,5 @@
+// Package auth provides API key extraction utilities.
+// internal/auth/auth.go:
 package auth
 
 import (
