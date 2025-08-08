@@ -1,0 +1,52 @@
+# Name of the workflow. This is displayed in the GitHub Actions UI for easy
+# identification among multiple workflows in the repository.
+name: ci
+
+# Defines the events that trigger this workflow to run automatically.
+on:
+  # Trigger the workflow on pull request events, such as opening, updating,
+  # or synchronizing a PR.
+  pull_request:
+    # Specifically, only trigger when the target (base) branch of the PR is
+    # 'main'. This ensures CI runs for changes proposed to the primary branch.
+    branches: [main]
+
+# Defines the jobs to run in this workflow. Jobs can run in parallel or
+# sequentially, but here we have a single job for simplicity.
+jobs:
+  # Job ID: 'tests'. This is an arbitrary internal identifier for the job.
+  tests:
+    # Display name for the job in the GitHub Actions UI, making it clear
+    # what this job focuses on (e.g., running tests).
+    name: Tests
+    # Specifies the type of runner (virtual machine) to use for the job.
+    # 'ubuntu-latest' provides a fresh Linux environment with up-to-date
+    # tools.
+    runs-on: ubuntu-latest
+
+    # List of steps to execute in this job. Steps run sequentially in the
+    # runner's shell, and each can use actions, run commands, or set env
+    # vars.
+    steps:
+      # Step 1: Checkout the repository code to the runner.
+      - name: Check out code  # Human-readable name for the step in the UI.
+        uses: actions/checkout@v4  # References a pre-built GitHub Action
+                                   # (version 4) to clone the repo,
+                                   # including the PR branch for testing
+                                   # changes.
+
+      # Step 2: Set up the Go programming language environment.
+      - name: Set up Go  # Step name for clarity in logs and UI.
+        uses: actions/setup-go@v5  # Uses a pre-built action (version 5) to
+                                   # install and configure Go on the runner.
+        with:  # Input parameters for the action.
+          go-version: "1.23.0"  # Specifies the exact Go version to install,
+                                # ensuring consistency across local and CI.
+
+      # Step 3: Run the unit tests with code coverage reporting.
+      - name: Run Unit Tests with Coverage  # Descriptive name for the testing step.
+        run: go test -cover ./...  # Executes 'go test' on all packages
+                                   # (./... means current dir and
+                                   # subdirectories), with -cover flag to
+                                   # print coverage percentage to logs.
+                                   # Fails the step if tests fail (exit 1).
