@@ -43,10 +43,10 @@ jobs:
           go-version: "1.23.0"  # Specifies the exact Go version to install,
                                 # ensuring consistency across local and CI.
 
-      # Step 3: Run the unit tests defined in the repository.
-      - name: Run Unit Tests  # Descriptive name for the testing step.
-        run: go test ./...  # Executes the 'go test' command on all packages
-                            # (./... means current dir and
-                            # subdirectories). This runs all *_test.go
-                            # files, failing the step (and job) if any
-                            # test fails, with exit code 1.
+      # Step 3: Run the unit tests with code coverage reporting.
+      - name: Run Unit Tests with Coverage  # Descriptive name for the testing step.
+        run: go test -cover ./...  # Executes 'go test' on all packages
+                                   # (./... means current dir and
+                                   # subdirectories), with -cover flag to
+                                   # print coverage percentage to logs.
+                                   # Fails the step if tests fail (exit 1).
