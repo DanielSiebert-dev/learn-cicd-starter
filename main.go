@@ -1,9 +1,9 @@
 // This file is the entry point for the Notely web application, written in Go. The app serves a simple web page and API for notes, optionally connecting to a database for data storage. It handles environment settings, web requests, and security basics. The overall flow is:
- // 1. Load settings from .env.
- // 2. Set up the web server and routes.
- // 3. Connect to a database if configured.
- // 4. Start listening for incoming requests on a port.
- // If no database is set, it runs in a limited mode without data operations.
+// 1. Load settings from .env.
+// 2. Set up the web server and routes.
+// 3. Connect to a database if configured.
+// 4. Start listening for incoming requests on a port.
+// If no database is set, it runs in a limited mode without data operations.
 
 package main
 
@@ -16,10 +16,10 @@ import (
 	"os"
 	"time"
 
+	"github.com/DanielSiebert-dev/learn-cicd-starter/internal/database"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/cors"
 	"github.com/joho/godotenv"
-	"github.com/DanielSiebert-dev/learn-cicd-starter/internal/database"
 	_ "github.com/tursodatabase/libsql-client-go/libsql"
 )
 
@@ -29,7 +29,8 @@ type apiConfig struct {
 }
 
 // Embed static files (e.g., HTML) into the binary so the app can serve them without external files.
- //go:embed static/*
+//
+//go:embed static/*
 var staticFiles embed.FS
 
 func main() {
@@ -100,9 +101,9 @@ func main() {
 
 	// Configure and start the HTTP server with timeout for security against attacks.
 	srv := &http.Server{
-		Addr:                 ":" + port,
-		Handler:              router,
-		ReadHeaderTimeout:    10 * time.Second,  // Timeout to prevent slow attacks on the server.
+		Addr:              ":" + port,
+		Handler:           router,
+		ReadHeaderTimeout: 10 * time.Second, // Timeout to prevent slow attacks on the server.
 	}
 
 	log.Printf("Serving on port: %s\n", port)
