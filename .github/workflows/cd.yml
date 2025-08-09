@@ -1,0 +1,74 @@
+name: cd
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  Deploy:
+    runs-on: ubuntu-latest
+    env:
+      AWS_REGION: eu-central-1
+      ECR_REPOSITORY: notely
+      IMAGE_NAME: notely
+      GO_VERSION: "1.23.0"
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Build production binary
+        run: ./scripts/buildprod.sh
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: ${{ env.AWS_REGION }}
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          role-session-name: github-actions-ecr
+
+      - name: Get AWS Account ID
+        id: acct
+        run: echo "id=$(aws sts get-caller-identity --query Account --output text)" >> "$GITHUB_OUTPUT"
+
+      # Create ECR repo if missing and add FinOps tags
+      - name: Ensure ECR repository (with tags)
+        run: |
+          set -euo pipefail
+          if ! aws ecr describe-repositories --repository-names "${ECR_REPOSITORY}" >/dev/null 2>&1; then
+            aws ecr create-repository --repository-name "${ECR_REPOSITORY}" \
+              --tags Key=Project,Value=learn-cicd-starter Key=Environment,Value=dev Key=Owner,Value=DanielSiebert-dev Key=CostCenter,Value=FinOps >/dev/null
+            echo "Created ECR repo ${ECR_REPOSITORY} with tags"
+          else
+            echo "ECR repository exists: ${ECR_REPOSITORY}"
+          fi
+
+      - name: Log in to Amazon ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and push Docker image (SHA + latest)
+        env:
+          ACCOUNT_ID: ${{ steps.acct.outputs.id }}
+        run: |
+          set -euo pipefail
+          REGISTRY="${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
+          SHA_TAG="${REGISTRY}/${ECR_REPOSITORY}:${GITHUB_SHA}"
+          LATEST_TAG="${REGISTRY}/${ECR_REPOSITORY}:latest"
+
+          echo "Building image ${SHA_TAG}"
+          docker build -t "${IMAGE_NAME}" .
+
+          docker tag "${IMAGE_NAME}" "${SHA_TAG}"
+          docker tag "${IMAGE_NAME}" "${LATEST_TAG}"
+
+          docker push "${SHA_TAG}"
+          docker push "${LATEST_TAG}"
+
+          echo "✅ Pushed:"
+          echo " - ${SHA_TAG}"
+          echo " - ${LATEST_TAG}"
