@@ -7,6 +7,12 @@ on:
 jobs:
   Deploy:
     runs-on: ubuntu-latest
+
+    # REQUIRED for OIDC → allows the job to request an ID token from GitHub
+    permissions:
+      id-token: write
+      contents: read
+
     env:
       AWS_REGION: eu-central-1
       ECR_REPOSITORY: notely
@@ -36,7 +42,6 @@ jobs:
         id: acct
         run: echo "id=$(aws sts get-caller-identity --query Account --output text)" >> "$GITHUB_OUTPUT"
 
-      # Create ECR repo if missing and add FinOps tags
       - name: Ensure ECR repository (with tags)
         run: |
           set -euo pipefail
