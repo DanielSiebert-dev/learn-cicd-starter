@@ -7,46 +7,78 @@ on:
   # Trigger the workflow on pull request events, such as opening, updating,
   # or synchronizing a PR.
   pull_request:
-    # Specifically, only trigger when the target (base) branch of the PR is
-    # 'main'. This ensures CI runs for changes proposed to the primary branch.
+    # Only run when the target (base) branch of the PR is 'main'.
     branches: [main]
 
-# Defines the jobs to run in this workflow. Jobs can run in parallel or
-# sequentially, but here we have a single job for simplicity.
+# Defines the jobs to run in this workflow. Jobs run in parallel by default.
 jobs:
-  # Job ID: 'tests'. This is an arbitrary internal identifier for the job.
+  # Job 1: Runs unit tests and security checks (gosec).
   tests:
-    # Display name for the job in the GitHub Actions UI, making it clear
-    # what this job focuses on (e.g., running tests).
     name: Tests
-    # Specifies the type of runner (virtual machine) to use for the job.
-    # 'ubuntu-latest' provides a fresh Linux environment with up-to-date
-    # tools.
     runs-on: ubuntu-latest
 
-    # List of steps to execute in this job. Steps run sequentially in the
-    # runner's shell, and each can use actions, run commands, or set env
-    # vars.
     steps:
-      # Step 1: Checkout the repository code to the runner.
-      - name: Check out code  # Human-readable name for the step in the UI.
-        uses: actions/checkout@v4  # References a pre-built GitHub Action
-                                   # (version 4) to clone the repo,
-                                   # including the PR branch for testing
-                                   # changes.
+      # Checkout the code.
+      - name: Check out code
+        uses: actions/checkout@v4
 
-      # Step 2: Set up the Go programming language environment.
-      - name: Set up Go  # Step name for clarity in logs and UI.
-        uses: actions/setup-go@v5  # Uses a pre-built action (version 5) to
-                                   # install and configure Go on the runner.
-        with:  # Input parameters for the action.
-          go-version: "1.23.0"  # Specifies the exact Go version to install,
-                                # ensuring consistency across local and CI.
+      # Set up Go. Pin to a specific version for reproducibility.
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.23.0"
 
-      # Step 3: Run the unit tests with code coverage reporting.
-      - name: Run Unit Tests with Coverage  # Descriptive name for the testing step.
-        run: go test -cover ./...  # Executes 'go test' on all packages
-                                   # (./... means current dir and
-                                   # subdirectories), with -cover flag to
-                                   # print coverage percentage to logs.
-                                   # Fails the step if tests fail (exit 1).
+      # Run tests with coverage first to verify functionality.
+      - name: Run Unit Tests with Coverage
+        run: go test -cover ./...
+
+      # --- Security (gosec) after tests ---
+      # gosec is not part of the Go toolchain, so we install it on the runner.
+      # Note: On the first push, it's acceptable for this step to fail to prove
+      # that gosec is actually running. After fixing findings, this job should pass.
+      - name: Install gosec (static application security testing)
+        run: go install github.com/securego/gosec/v2/cmd/gosec@latest
+
+      # (Optional but helpful for debugging): print the installed version.
+      - name: Show gosec version
+        run: $(go env GOPATH)/bin/gosec -version
+
+      # Run gosec on the entire module. gosec returns non-zero on findings/build errors
+      # which will fail the job until issues are fixed.
+      - name: Run gosec
+        run: $(go env GOPATH)/bin/gosec ./...
+
+  # Job 2: Checks code formatting and linting.
+  style:
+    name: Style
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checkout the code.
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      # Set up Go.
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.23.0"
+
+      # Install staticcheck for linting.
+      - name: Install Staticcheck
+        run: go install honnef.co/go/tools/cmd/staticcheck@latest
+
+      # Check formatting. `gofmt -l` prints files that need formatting; fail with details if any.
+      - name: Check Formatting
+        run: |
+          files=$(gofmt -l .)
+          if [ -n "$files" ]; then
+            echo "The following files are not formatted with gofmt:" >&2
+            echo "$files"
+            echo "Run: gofmt -s -w ."
+            exit 1
+          fi
+
+      # Lint with staticcheck, using text format for clearer CI logs.
+      - name: Run Linting
+        run: staticcheck -f text ./...  # config auto-loaded from staticcheck.conf if present
